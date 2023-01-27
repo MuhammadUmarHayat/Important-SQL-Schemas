@@ -1,0 +1,30 @@
+CREATE TABLE items (
+    id INT PRIMARY KEY,
+    name VARCHAR(255),
+    description TEXT,
+    price DECIMAL(10, 2),
+    category VARCHAR(255),
+    supplier_id INT
+);
+
+CREATE TABLE suppliers (
+    id INT PRIMARY KEY,
+    name VARCHAR(255),
+    email VARCHAR(255),
+    phone VARCHAR(255)
+);
+
+CREATE TABLE inventory (
+    id INT PRIMARY KEY,
+    item_id INT,
+    quantity INT,
+    FOREIGN KEY (item_id) REFERENCES items(id)
+);
+
+CREATE TABLE orders (
+    id INT PRIMARY KEY,
+    item_id INT,
+    quantity INT,
+    order_date TIMESTAMP,
+    FOREIGN KEY (item_id) REFERENCES items(id)
+);
