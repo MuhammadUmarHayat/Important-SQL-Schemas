@@ -1,0 +1,30 @@
+CREATE TABLE buses (
+    id INT PRIMARY KEY,
+    name VARCHAR(255),
+    seats INT
+);
+
+CREATE TABLE routes (
+    id INT PRIMARY KEY,
+    name VARCHAR(255),
+    departure_time TIMESTAMP,
+    arrival_time TIMESTAMP,
+    bus_id INT,
+    FOREIGN KEY (bus_id) REFERENCES buses(id)
+);
+
+CREATE TABLE customers (
+    id INT PRIMARY KEY,
+    name VARCHAR(255),
+    email VARCHAR(255),
+    phone VARCHAR(255)
+);
+
+CREATE TABLE tickets (
+    id INT PRIMARY KEY,
+    route_id INT,
+    customer_id INT,
+    seat_number INT,
+    FOREIGN KEY (route_id) REFERENCES routes(id),
+    FOREIGN KEY (customer_id) REFERENCES customers(id)
+);
