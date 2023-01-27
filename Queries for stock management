@@ -1,0 +1,26 @@
+Retrieve the details of all orders placed on a specific date:
+SELECT * FROM orders WHERE order_date = ?;
+Retrieve the details of all items whose stock has fallen below the reorder level:
+SELECT items.* FROM items JOIN inventory ON items.id = inventory.item_id WHERE inventory.quantity < items.reorder_level;
+update:
+UPDATE inventory SET quantity = ? WHERE item_id = ?;
+
+SQL query to retrieve the remaining quantity of items from the items table:
+SELECT name, (quantity - SUM(quantity_sold)) as remaining_quantity
+FROM items
+LEFT JOIN (SELECT item_id, SUM(quantity) as quantity_sold
+           FROM orders
+           GROUP BY item_id) as sold
+ON items.id = sold.item_id
+GROUP BY items.id;
+
+You can also use the same query with a condition to check for a specific item.
+SELECT name, (quantity - SUM(quantity_sold)) as remaining_quantity
+FROM items
+LEFT JOIN (SELECT item_id, SUM(quantity) as quantity_sold
+           FROM orders
+           GROUP BY item_id) as sold
+ON items.id = sold.item_id
+WHERE name = "ItemName"
+GROUP BY items.id;
+
