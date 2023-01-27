@@ -14,7 +14,8 @@ LEFT JOIN (SELECT item_id, SUM(quantity) as quantity_sold
 ON items.id = sold.item_id
 GROUP BY items.id;
 
-You can also use the same query with a condition to check for a specific item.
+You can also use the same query with a condition to check for a specific item:
+
 SELECT name, (quantity - SUM(quantity_sold)) as remaining_quantity
 FROM items
 LEFT JOIN (SELECT item_id, SUM(quantity) as quantity_sold
@@ -23,4 +24,44 @@ LEFT JOIN (SELECT item_id, SUM(quantity) as quantity_sold
 ON items.id = sold.item_id
 WHERE name = "ItemName"
 GROUP BY items.id;
+
+Retrieve the details of all items that are out of stock:
+SELECT items.*
+FROM items
+LEFT JOIN (SELECT item_id, SUM(quantity) as quantity_sold
+           FROM orders
+           GROUP BY item_id) as sold
+ON items.id = sold.item_id
+WHERE (quantity - COALESCE(quantity_sold, 0)) <= 0;
+
+Retrieve the total revenue and the total quantity sold for each category:
+
+SELECT category, SUM(items.price * orders.quantity) as revenue, SUM(orders.quantity) as quantity_sold
+FROM items
+JOIN orders ON items.id = orders.item_id
+GROUP BY category;
+
+Retrieve the details of the top 10 items by total revenue:
+
+SELECT items.*, SUM(items.price * orders.quantity) as revenue
+FROM items
+JOIN orders ON items.id = orders.item_id
+GROUP BY items.id
+ORDER BY revenue DESC
+LIMIT 10;
+
+Retrieve the details of the suppliers whose products have not been ordered in the last 30 days:
+
+SELECT suppliers.*
+FROM suppliers
+LEFT JOIN items ON suppliers.id = items.supplier_id
+LEFT JOIN orders ON items.id = orders.item_id
+WHERE orders.order_date < DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+GROUP BY suppliers.id
+HAVING COUNT(DISTINCT orders.id) = 0;
+
+
+
+
+
 
