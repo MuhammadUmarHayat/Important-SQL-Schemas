@@ -1,0 +1,128 @@
+USERS
+id INT PRIMARY KEY
+username VARCHAR(255) NOT NULL
+password VARCHAR(255) NOT NULL
+
+SUPPLIERS
+id INT PRIMARY KEY
+name VARCHAR(255) NOT NULL
+contact_person VARCHAR(255)
+phone VARCHAR(20)
+email VARCHAR(255)
+address VARCHAR(255)
+
+PRODUCTS
+id INT PRIMARY KEY
+name VARCHAR(255) NOT NULL
+description VARCHAR(255)
+unit_price DECIMAL(10,2) NOT NULL
+quantity INT NOT NULL
+
+PURCHASES
+id INT PRIMARY KEY
+supplier_id INT NOT NULL
+user_id INT NOT NULL
+product_id INT NOT NULL
+quantity INT NOT NULL
+total_price DECIMAL(10,2) NOT NULL
+purchase_date DATE NOT NULL
+
+SALES
+id INT PRIMARY KEY
+user_id INT NOT NULL
+product_id INT NOT NULL
+quantity INT NOT NULL
+total_price DECIMAL(10,2) NOT NULL
+sale_date DATE NOT NULL
+
+EXPENSES
+id INT PRIMARY KEY
+user_id INT NOT NULL
+category VARCHAR(255) NOT NULL
+description VARCHAR(255)
+amount DECIMAL(10,2) NOT NULL
+date DATE NOT NULL
+-------------------------------------------------------Queries----------------------------------------------------
+--Total purchases made by each supplier:
+SELECT s.name, SUM(p.total_price) AS total_purchases
+FROM suppliers s
+JOIN purchases p ON p.supplier_id = s.id
+GROUP BY s.name;
+
+--Total sales made by each user:
+SELECT u.username, SUM(s.total_price) AS total_sales
+FROM users u
+JOIN sales s ON s.user_id = u.id
+GROUP BY u.username;
+
+--Total revenue and profit by product:
+SELECT p.name, SUM(s.total_price) AS total_revenue, SUM(s.total_price - (p.unit_price * s.quantity)) AS total_profit
+FROM products p
+JOIN sales s ON s.product_id = p.id
+GROUP BY p.name;
+
+--Total purchases, sales, and profit for each product category:
+SELECT p.category, SUM(p.total_price) AS total_purchases, SUM(s.total_price) AS total_sales, SUM(s.total_price - (p.unit_price * s.quantity)) AS total_profit
+FROM products p
+JOIN purchases pr ON pr.product_id = p.id
+JOIN sales s ON s.product_id = p.id
+GROUP BY p.category;
+
+--Total expenses by category for a specific time period:
+SELECT e.category, SUM(e.amount) AS total_expenses
+FROM expenses e
+WHERE e.date >= 'start_date' AND e.date <= 'end_date'
+GROUP BY e.category;
+--Top spending categories for a specific user:
+SELECT e.category, SUM(e.amount) AS total_expenses
+FROM expenses e
+WHERE e.user_id
+
+-- Total purchases, sales, and profit by product for a specific time period:
+SELECT p.name, SUM(pr.total_price) AS total_purchases, SUM(s.total_price) AS total_sales, SUM(s.total_price - (p.unit_price * s.quantity)) AS total_profit
+FROM products p
+JOIN purchases pr ON pr.product_id = p.id
+JOIN sales s ON s.product_id = p.id
+WHERE (pr.purchase_date >= 'start_date' AND pr.purchase_date <= 'end_date') OR (s.sale_date >= 'start_date' AND s.sale_date <= 'end_date')
+GROUP BY p.name;
+
+--Total revenue and profit by user for a specific time period:
+SELECT u.username, SUM(s.total_price) AS total_revenue, SUM(s.total_price - (p.unit_price * s.quantity)) AS total_profit
+FROM users u
+JOIN sales s ON s.user_id = u.id
+JOIN products p ON p.id = s.product_id
+WHERE s.sale_date >= 'start_date' AND s.sale_date <= 'end_date'
+GROUP BY u.username;
+
+--Top selling products by quantity for a specific time period:
+SELECT p.name, SUM(s.quantity) AS total_sales
+FROM sales s
+JOIN products p ON p.id = s.product_id
+WHERE s.sale_date >= 'start_date' AND s.sale_date <= 'end_date'
+GROUP BY p.name
+ORDER BY total_sales DESC;
+
+---Total purchases by supplier for a specific time period:
+SELECT s.name, SUM(p.total_price) AS total_purchases
+FROM suppliers s
+JOIN purchases p ON p.supplier_id = s.id
+WHERE p.purchase_date >= 'start_date' AND p.purchase_date <= 'end_date'
+GROUP BY s.name;
+
+---Top spending users for a specific time period:
+SELECT u.username, SUM(e.amount) AS total_expenses
+FROM users u
+JOIN expenses e ON e.user_id = u.id
+WHERE e.date >= 'start_date' AND e.date <= 'end_date'
+GROUP BY u.username
+ORDER BY total_expenses DESC;
+
+-----Top spending categories by user for a specific time period:
+SELECT e.category, SUM(e.amount) AS total_expenses
+FROM expenses e
+WHERE e.user_id = 'user_id' AND e.date >= 'start_date' AND e.date <= 'end_date'
+GROUP BY e.category
+ORDER BY total_expenses DESC;
+
+
+
