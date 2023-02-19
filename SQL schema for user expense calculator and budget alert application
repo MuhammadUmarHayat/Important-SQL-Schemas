@@ -1,0 +1,104 @@
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  username VARCHAR(255) NOT NULL,
+  password VARCHAR(255) NOT NULL,
+  email VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE categories (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE expenses (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id),
+  category_id INTEGER NOT NULL REFERENCES categories(id),
+  description TEXT,
+  amount DECIMAL(10, 2) NOT NULL,
+  date DATE NOT NULL
+);
+
+CREATE TABLE budgets (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id),
+  category_id INTEGER NOT NULL REFERENCES categories(id),
+  amount DECIMAL(10, 2) NOT NULL,
+  start_date DATE NOT NULL,
+  end_date DATE NOT NULL
+);
+/////////////////////////queries/////////////////////////////////////////////////////////////////
+1.Total expenses by user for a specific time period:
+SELECT u.username, SUM(e.amount) AS total_expenses
+FROM users u
+JOIN expenses e ON e.user_id = u.id
+WHERE e.date >= 'start_date' AND e.date <= 'end_date'
+GROUP BY u.username;
+
+2.Total expenses by category for a specific time period:
+SELECT c.name, SUM(e.amount) AS total_expenses
+FROM categories c
+JOIN expenses e ON e.category_id = c.id
+WHERE e.date >= 'start_date' AND e.date <= 'end_date'
+GROUP BY c.name;
+
+3.Total expenses and budget by category for a specific user and time period:
+SELECT c.name, SUM(e.amount) AS total_expenses, b.amount AS budget
+FROM categories c
+LEFT JOIN expenses e ON e.category_id = c.id
+LEFT JOIN budgets b ON b.category_id = c.id AND b.user_id = 'user_id' AND e.date >= b.start_date AND e.date <= b.end_date
+WHERE e.user_id = 'user_id' AND e.date >= 'start_date' AND e.date <= 'end_date'
+GROUP BY c.name, b.amount;
+
+4Top spending categories for a specific user:
+SELECT c.name, SUM(e.amount) AS total_expenses
+FROM categories c
+JOIN expenses e ON e.category_id = c.id
+WHERE e.user_id = 'user_id'
+GROUP BY c.name
+ORDER BY total_expenses DESC
+LIMIT 5;
+5.Monthly expenses for a specific user over the past year:
+SELECT date_trunc('month', e.date) AS month, SUM(e.amount) AS total_expenses
+FROM expenses e
+WHERE e.user_id = 'user_id' AND e.date >= NOW() - INTERVAL '1 year'
+GROUP BY month;
+
+6.Monthly expenses by category for a specific user over the past year:
+SELECT c.name, date_trunc('month', e.date) AS month, SUM(e.amount) AS total_expenses
+FROM categories c
+JOIN expenses e ON e.category_id = c.id
+WHERE e.user_id = 'user_id' AND e.date >= NOW() - INTERVAL '1 year'
+GROUP BY c.name, month;
+
+7.Remaining budget by category for a specific user and time period:
+SELECT c.name, b.amount - SUM(e.amount) AS remaining_budget
+FROM categories c
+LEFT JOIN expenses e ON e.category_id = c.id AND e.user_id = 'user_id' AND e.date >= 'start_date' AND e.date <= 'end_date'
+LEFT JOIN budgets b ON b.category_id = c.id AND b.user_id = 'user_id' AND b.start_date <= 'end_date' AND b.end_date >= 'start_date'
+WHERE e.id IS NULL OR b.id IS NOT NULL
+GROUP BY c.name, b.amount;
+
+8.Percentage of total expenses by category for a specific user and time period:
+SELECT c.name, SUM(e.amount) / (SELECT SUM(amount) FROM expenses WHERE user_id = 'user_id' AND date >= 'start_date' AND date <= 'end_date') AS percent_of_total
+FROM categories c
+JOIN expenses e ON e.category_id = c.id
+WHERE e.user_id = 'user_id' AND e.date >= 'start_date' AND e.date <= 'end_date'
+GROUP BY c.name;
+9.Average daily expenses for a specific user and time period:
+SELECT AVG(SUM(e.amount)) AS avg_daily_expenses
+FROM expenses e
+WHERE e.user_id = 'user_id' AND e.date >= 'start_date' AND e.date <= 'end_date'
+GROUP BY date_trunc('day', e.date)
+HAVING COUNT(*) > 0;
+
+10.Total expenses and remaining budget by user for a specific time period:
+SELECT u.username, SUM(e.amount) AS total_expenses, SUM(b.amount - e.amount) AS remaining_budget
+FROM users u
+LEFT JOIN expenses e ON e.user_id = u.id AND e.date >= 'start_date' AND e.date <= 'end_date'
+LEFT JOIN budgets b ON b.user_id = u.id AND b.start_date <= 'end_date' AND b.end_date >= 'start_date'
+GROUP BY u.username;
+
+
+
+
