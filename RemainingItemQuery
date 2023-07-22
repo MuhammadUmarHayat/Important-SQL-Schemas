@@ -1,0 +1,21 @@
+CREATE TABLE stock_table (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    item_name VARCHAR(100) NOT NULL,
+    quantity INT NOT NULL
+);
+CREATE TABLE sale_table (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    item_name VARCHAR(100) NOT NULL,
+    quantity_sold INT NOT NULL,
+    sale_date DATE NOT NULL
+);
+//query to fetch remaining quantity of each item 
+SELECT
+    stock_table.item_name,
+    stock_table.quantity - COALESCE(SUM(sale_table.quantity_sold), 0) AS remaining_quantity
+FROM
+    stock_table
+LEFT JOIN
+    sale_table ON stock_table.item_name = sale_table.item_name
+GROUP BY
+    stock_table.item_name, stock_table.quantity;
